@@ -9,6 +9,15 @@
   </head>
   <body>
     <a-scene background="color: rgb(10, 10, 10)" cursor="rayOrigin: mouse">
+      <a-entity light="type: ambient; color: #BBB"></a-entity>
+      <!-- <a-entity
+        light="type: directional; color: #FFF; intensity: 0.6"
+        position="-0.5 1 1"
+      ></a-entity> -->
+      <a-entity
+        light="type: point; color: #FFF; intensity: 0.6"
+        position="0 0 0"
+      ></a-entity>
       <!-- <a-box color="blue"></a-box> -->
       <!-- <a-entity
         camera="active: true"
@@ -23,6 +32,9 @@
         wasd-controls
         data-aframe-default-camera
       ></a-camera> -->
+      <!-- <a-camera>
+        <a-box color="blue" position="0 0 -10"></a-box>
+      </a-camera> -->
     </a-scene>
   </body>
 </html>
