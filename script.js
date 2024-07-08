@@ -31,19 +31,6 @@ const guideEntities = [];
 
 const existingEntities = [];
 
-// updateGuideEntities({
-//   geometry: potentialGeometries[getRandomInt(0, potentialGeometries.length)],
-//   color: { r: 0, g: 0, b: 255 },
-// });
-
-// // just for testing purposes
-// setTimeout(() => {
-//   updateGuideEntities({
-//     geometry: potentialGeometries[getRandomInt(0, potentialGeometries.length)],
-//     color: { r: 255, g: 0, b: 0 },
-//   });
-// }, 5000);
-
 function run() {
   addEntitiesInCircle(createRandomEntity, {
     degreeIncrement: 20,
@@ -55,8 +42,8 @@ function run() {
 
   addEntitiesInCircle(createGuideEntity, {
     degreeIncrement: 90,
-    distance: 16,
-    y: 5,
+    distance: 20,
+    y: 7,
   });
 
   console.log("Loaded");
@@ -117,11 +104,6 @@ function createRandomEntity(position) {
         newEntityColorG === guideColorG &&
         newEntityColorB === guideColorB
       ) {
-        // updateGuideEntities({
-        //   geometry:
-        //     potentialGeometries[getRandomInt(0, potentialGeometries.length)],
-        //   color: { r: 255, g: 0, b: 0 },
-        // });
         updateGuideEntities(generateNextGuideEntityData());
       } else {
         alert("nope!");
@@ -135,23 +117,16 @@ function createRandomEntity(position) {
 function createGuideEntity(position) {
   const newEntity = document.createElement("a-entity");
   newEntity.setAttribute("position", position);
-  // animation="property: position; to: 1 8 -10; dur: 2000; easing: linear; loop: true" color="tomato"
-  // newEntity.setAttribute("animation", {
-  //   property: "position",
-  //   to: { x: 1, y: 8, z: -10 },
-  //   dur: 2000,
-  //   easing: "linear",
-  //   loop: true,
-  //   color: "tomato",
-  // });
+  console.log(position.rotation);
+  newEntity.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
+  newEntity.setAttribute("scale", { x: 2, y: 2, z: 2 });
   newEntity.setAttribute("animation", {
     property: "position",
-    to: { x: 1, y: 8, z: -10 },
+    to: { x: position.x, y: position.y + 0.5, z: position.z },
     dir: "alternate",
     dur: 2000,
-    easing: "easeInOutQuad",
+    easing: "easeInOutSine",
     loop: true,
-    color: "tomato",
   });
   updateGuideEntityFromVars(newEntity);
   scene.appendChild(newEntity);
@@ -173,7 +148,7 @@ function addEntitiesInCircle(callback, options = {}) {
     const rad = deg * (Math.PI / 180);
     const x = Math.cos(rad) * distance;
     const z = Math.sin(rad) * distance;
-    callback({ x, y, z });
+    callback({ x, y, z, deg });
   }
 }
 
