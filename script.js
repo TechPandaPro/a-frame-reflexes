@@ -46,6 +46,13 @@ function run() {
     y: 7,
   });
 
+  addEntitiesInCircle(createScoreEntities, {
+    degreeOffset: 45,
+    degreeIncrement: 90,
+    distance: 20,
+    y: 7,
+  });
+
   console.log("Loaded");
 }
 
@@ -69,7 +76,7 @@ function createRandomEntity(position) {
         10,
         10,
         10
-      ) < 0.1 &&
+      ) < 0.1 ||
       existingEntities.find(
         (entity) =>
           entity.geometry === newEntityGeometry &&
@@ -105,6 +112,40 @@ function createRandomEntity(position) {
         newEntityColorB === guideColorB
       ) {
         updateGuideEntities(generateNextGuideEntityData());
+
+        const successText = document.createElement("a-text");
+        successText.setAttribute("value", "+1");
+        // successText.setAttribute("material", "transparent", true);
+        // successText.setAttribute("color", "#00ff00");
+        successText.setAttribute("rotation", {
+          x: 0,
+          y: 270 - position.deg,
+          z: 0,
+        });
+        successText.setAttribute("align", "center");
+        successText.setAttribute("width", 10);
+
+        successText.setAttribute("position", {
+          x: position.x,
+          y: position.y + 2,
+          z: position.z,
+        });
+        successText.setAttribute("animation", {
+          property: "position",
+          to: { x: position.x, y: position.y + 2.5, z: position.z },
+          dur: 500,
+          easing: "easeOutQuad",
+        });
+
+        successText.setAttribute("opacity", 1);
+        successText.setAttribute("animation__2", {
+          property: "opacity",
+          to: 0,
+          dur: 500,
+          easing: "easeOutQuad",
+        });
+
+        scene.appendChild(successText);
       } else {
         alert("nope!");
       }
@@ -117,7 +158,6 @@ function createRandomEntity(position) {
 function createGuideEntity(position) {
   const newEntity = document.createElement("a-entity");
   newEntity.setAttribute("position", position);
-  console.log(position.rotation);
   newEntity.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
   newEntity.setAttribute("scale", { x: 2, y: 2, z: 2 });
   newEntity.setAttribute("animation", {
@@ -139,12 +179,54 @@ function generateNextGuideEntityData() {
   return JSON.parse(JSON.stringify(randomEntity));
 }
 
+function createScoreEntities(position) {
+  const scoreRotation = { x: 0, y: 90 - position.deg, z: 0 };
+
+  // const primaryBox = document.createElement("a-box");
+  // primaryBox.setAttribute("rotation", scoreRotation);
+  // // primaryBox.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
+  // // primaryBox.setAttribute("rotation", { x: 0, y: position.deg + 90, z: 0 });
+  // // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
+  // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
+  // primaryBox.setAttribute("position", position);
+  // scene.appendChild(primaryBox);
+
+  // const box2 = document.createElement("a-box");
+  // box2.setAttribute("rotation", scoreRotation);
+  // primaryBox.setAttribute("rotation", { x: 0, y: position.deg + 90, z: 0 });
+  // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
+  // box2.setAttribute("scale", { x: 7, y: 1, z: 0.3 });
+  // box2.setAttribute("position", {
+  //   x: position.x + 0.1,
+  //   y: position.y + 1.5,
+  //   z: position.z,
+  // });
+  // scene.appendChild(box2);
+
+  const timeText = document.createElement("a-text");
+  timeText.setAttribute("value", "hello world");
+  // timeText.setAttribute("color", "#ff0000");
+  // successText.setAttribute("material", "transparent", true);
+  // successText.setAttribute("color", "#00ff00");
+  timeText.setAttribute("rotation", {
+    x: 0,
+    y: scoreRotation,
+    z: 0,
+  });
+  timeText.setAttribute("align", "center");
+  // timeText.setAttribute("width", 10);
+  timeText.setAttribute("position", position);
+  // timeText.setAttribute("scale", { x: 100, y: 100, z: 100 });
+  scene.appendChild(timeText);
+}
+
 function addEntitiesInCircle(callback, options = {}) {
+  const degreeOffset = options.degreeOffset ?? 0;
   const degreeIncrement = options.degreeIncrement ?? 20;
   const distance = options.distance ?? 10;
   const y = options.y ?? 0;
 
-  for (let deg = 0; deg < 360; deg += degreeIncrement) {
+  for (let deg = degreeOffset; deg < 360; deg += degreeIncrement) {
     const rad = deg * (Math.PI / 180);
     const x = Math.cos(rad) * distance;
     const z = Math.sin(rad) * distance;
