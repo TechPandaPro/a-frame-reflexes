@@ -27,8 +27,11 @@ let guideColorG;
 let guideColorB;
 let guideColor;
 
-const guideEntities = [];
+let playUntil = Date.now() + 30000;
+let score = 0;
 
+const scorePlanes = [];
+const guideEntities = [];
 const existingEntities = [];
 
 function run() {
@@ -96,6 +99,28 @@ function createRandomEntity(position) {
     const newEntity = document.createElement(`a-${newEntityGeometry}`);
     newEntity.setAttribute("color", newEntityColor);
     newEntity.setAttribute("position", position);
+    // newEntity.setAttribute("material", "metalness", 1);
+    newEntity.setAttribute("material", "blending", "normal");
+    setTimeout(() => {
+      newEntity.setAttribute("displacementScale", 1000);
+      newEntity.setAttribute("src", "#entityTexture");
+    }, 500);
+    newEntity.setAttribute("animation", {
+      property: "rotation",
+      to: { x: 0, y: 360, z: 0 },
+      // dir: "alternate",
+      dur: 20000,
+      easing: "linear",
+      loop: true,
+    });
+    // newEntity.setAttribute("animation__2", {
+    //   property: "rotation.z",
+    //   to: 5,
+    //   dir: "alternate",
+    //   dur: 2000,
+    //   easing: "linear",
+    //   loop: true,
+    // });
     scene.appendChild(newEntity);
 
     existingEntities.push({
@@ -123,7 +148,7 @@ function createRandomEntity(position) {
           z: 0,
         });
         successText.setAttribute("align", "center");
-        successText.setAttribute("width", 10);
+        successText.setAttribute("width", 13);
 
         successText.setAttribute("position", {
           x: position.x,
@@ -180,10 +205,8 @@ function generateNextGuideEntityData() {
 }
 
 function createScoreEntities(position) {
-  const scoreRotation = { x: 0, y: 90 - position.deg, z: 0 };
-
   // const primaryBox = document.createElement("a-box");
-  // primaryBox.setAttribute("rotation", scoreRotation);
+  // primaryBox.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
   // // primaryBox.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
   // // primaryBox.setAttribute("rotation", { x: 0, y: position.deg + 90, z: 0 });
   // // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
@@ -191,33 +214,50 @@ function createScoreEntities(position) {
   // primaryBox.setAttribute("position", position);
   // scene.appendChild(primaryBox);
 
-  // const box2 = document.createElement("a-box");
-  // box2.setAttribute("rotation", scoreRotation);
-  // primaryBox.setAttribute("rotation", { x: 0, y: position.deg + 90, z: 0 });
-  // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
-  // box2.setAttribute("scale", { x: 7, y: 1, z: 0.3 });
-  // box2.setAttribute("position", {
-  //   x: position.x + 0.1,
-  //   y: position.y + 1.5,
+  // const timeText = document.createElement("a-text");
+  // timeText.setAttribute("value", "hello world");
+  // timeText.setAttribute("color", "#ff0000");
+  // // successText.setAttribute("material", "transparent", true);
+  // // successText.setAttribute("color", "#00ff00");
+  // timeText.setAttribute("rotation", { x: 0, y: 270 - position.deg, z: 0 });
+  // timeText.setAttribute("align", "center");
+  // // timeText.setAttribute("width", 10);
+  // timeText.setAttribute("position", {
+  //   x: position.x + 2,
+  //   y: position.y,
   //   z: position.z,
   // });
-  // scene.appendChild(box2);
-
-  const timeText = document.createElement("a-text");
-  timeText.setAttribute("value", "hello world");
-  // timeText.setAttribute("color", "#ff0000");
-  // successText.setAttribute("material", "transparent", true);
-  // successText.setAttribute("color", "#00ff00");
-  timeText.setAttribute("rotation", {
-    x: 0,
-    y: scoreRotation,
-    z: 0,
-  });
-  timeText.setAttribute("align", "center");
-  // timeText.setAttribute("width", 10);
-  timeText.setAttribute("position", position);
   // timeText.setAttribute("scale", { x: 100, y: 100, z: 100 });
-  scene.appendChild(timeText);
+  // scene.appendChild(timeText);
+
+  const plane = document.createElement("a-plane");
+  plane.setAttribute("width", 7);
+  plane.setAttribute("height", 4);
+  plane.setAttribute("position", position);
+  plane.setAttribute("rotation", { x: 0, y: 270 - position.deg, z: 0 });
+  plane.setAttribute("material", "color", "#000000");
+  // plane.setAttribute("text", "value", "hello world");
+  plane.setAttribute("text", {
+    value: `Time: ${formatTimeLeft()}\nScore: ${score}`,
+    color: "#ffff00",
+    wrapPixels: 350,
+    xOffset: 0.5,
+    zOffset: 0.02,
+  });
+  scene.appendChild(plane);
+
+  scorePlanes.push(plane);
+}
+
+function formatTimeLeft() {
+  const timeLeftSeconds = Math.ceil(Math.max(playUntil - Date.now(), 0) / 1000);
+
+  const roundMinutes = Math.floor(timeLeftSeconds / 60);
+  const roundSeconds = timeLeftSeconds % 60;
+
+  return `${roundMinutes.toString().padStart(2, "0")}:${roundSeconds
+    .toString()
+    .padStart(2, "0")}`;
 }
 
 function addEntitiesInCircle(callback, options = {}) {
