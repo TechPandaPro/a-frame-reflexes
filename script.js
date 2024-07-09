@@ -34,6 +34,18 @@ const scorePlanes = [];
 const guideEntities = [];
 const existingEntities = [];
 
+AFRAME.registerComponent("scoreboard", {
+  tick: function () {
+    this.el.setAttribute("text", {
+      value: `Time: ${formatTimeLeft()}\nScore: ${score}`,
+      color: "#ffff00",
+      wrapPixels: 350,
+      xOffset: 0.5,
+      zOffset: 0.02,
+    });
+  },
+});
+
 function run() {
   addEntitiesInCircle(createRandomEntity, {
     degreeIncrement: 20,
@@ -97,14 +109,13 @@ function createRandomEntity(position) {
     else generateNew = false;
 
     const newEntity = document.createElement(`a-${newEntityGeometry}`);
-    newEntity.setAttribute("color", newEntityColor);
-    newEntity.setAttribute("position", position);
+    newEntity.setAttribute("material", "color", newEntityColor);
     // newEntity.setAttribute("material", "metalness", 1);
-    newEntity.setAttribute("material", "blending", "normal");
-    setTimeout(() => {
-      newEntity.setAttribute("displacementScale", 1000);
-      newEntity.setAttribute("src", "#entityTexture");
-    }, 500);
+    // newEntity.setAttribute("material", "blending", "normal");
+    // setTimeout(() => {
+    newEntity.setAttribute("material", "src", "#entityTexture");
+    newEntity.setAttribute("position", position);
+    // }, 500);
     newEntity.setAttribute("animation", {
       property: "rotation",
       to: { x: 0, y: 360, z: 0 },
@@ -136,6 +147,8 @@ function createRandomEntity(position) {
         newEntityColorG === guideColorG &&
         newEntityColorB === guideColorB
       ) {
+        score++;
+
         updateGuideEntities(generateNextGuideEntityData());
 
         const successText = document.createElement("a-text");
@@ -148,7 +161,7 @@ function createRandomEntity(position) {
           z: 0,
         });
         successText.setAttribute("align", "center");
-        successText.setAttribute("width", 13);
+        successText.setAttribute("width", 16);
 
         successText.setAttribute("position", {
           x: position.x,
@@ -172,7 +185,49 @@ function createRandomEntity(position) {
 
         scene.appendChild(successText);
       } else {
-        alert("nope!");
+        // const light = document.createElement("a-entity");
+        // light.setAttribute("light", {
+        //   type: "spot",
+        //   color: "#FFF",
+        //   intensity: 10,
+        //   position: { x: position.x, y: position.y - 100, z: position.z },
+        //   // angle: 45,
+        //   target: newEntity,
+        // });
+        // scene.append(light);
+
+        // const lightBox = document.createElement("a-box");
+        const light = document.createElement("a-entity");
+        // lightBox.setAttribute("position", {
+        //   x: position.x,
+        //   y: position.y - 5,
+        //   z: position.z,
+        // });
+        light.setAttribute("light", {
+          type: "spot",
+          color: "#ff0000",
+          intensity: 10,
+          penumbra: 0,
+          angle: 10,
+          // angle: 45,
+          target: newEntity,
+        });
+        // lightBox.setAttribute("position", { x: 0, y: 5, z: 0 });
+        // lightBox.setAttribute("light", {
+        //   type: "spot",
+        //   color: "#ff0000",
+        //   intensity: 10,
+        //   penumbra: 0.1,
+        //   angle: 20,
+        //   // angle: 45,
+        //   target: newEntity,
+        // });
+        scene.append(light);
+        setTimeout(() => light.parentElement.removeChild(light), 100);
+        // <a-entity
+        //   light="type: point; color: #FFF; intensity: 0.6"
+        //   position="0 0 0"
+        // ></a-entity>
       }
 
       console.log("clicked!");
@@ -193,6 +248,7 @@ function createGuideEntity(position) {
     easing: "easeInOutSine",
     loop: true,
   });
+  newEntity.setAttribute("material", "src", "#entityTexture");
   updateGuideEntityFromVars(newEntity);
   scene.appendChild(newEntity);
   guideEntities.push(newEntity);
@@ -231,19 +287,20 @@ function createScoreEntities(position) {
   // scene.appendChild(timeText);
 
   const plane = document.createElement("a-plane");
+  plane.setAttribute("scoreboard", "");
   plane.setAttribute("width", 7);
   plane.setAttribute("height", 4);
   plane.setAttribute("position", position);
   plane.setAttribute("rotation", { x: 0, y: 270 - position.deg, z: 0 });
   plane.setAttribute("material", "color", "#000000");
   // plane.setAttribute("text", "value", "hello world");
-  plane.setAttribute("text", {
-    value: `Time: ${formatTimeLeft()}\nScore: ${score}`,
-    color: "#ffff00",
-    wrapPixels: 350,
-    xOffset: 0.5,
-    zOffset: 0.02,
-  });
+  // plane.setAttribute("text", {
+  //   value: `Time: ${formatTimeLeft()}\nScore: ${score}`,
+  //   color: "#ffff00",
+  //   wrapPixels: 350,
+  //   xOffset: 0.5,
+  //   zOffset: 0.02,
+  // });
   scene.appendChild(plane);
 
   scorePlanes.push(plane);
