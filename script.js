@@ -221,29 +221,53 @@ function createRandomEntity(position) {
   }
 }
 
-const endBoard = document.createElement("a-plane");
-scene.appendChild(endBoard);
 // FIXME: this shouldn't be a timeout, this should happen when the timer ends
 setTimeout(() => {
+  const endBoard = document.createElement("a-plane");
   const pos = getPosDistanceAwayFromCamera(10);
   endBoard.setAttribute("rotation", pos.rot);
   endBoard.setAttribute("position", pos.pos);
   endBoard.setAttribute("width", 7);
-  endBoard.setAttribute("height", 4);
+  endBoard.setAttribute("height", 4.3);
   endBoard.setAttribute("material", "color", "#000000");
   endBoard.setAttribute("text", {
     value: `Round Over!
-
-Score: ${score}
-Incorrect Clicks: ${"12"}`,
+    
+    Score: ${score}
+    Incorrect Clicks: ${"12"}
+ `,
     // FIXME: add accurate incorrect clicks count
     // align: "center",
+    // baseline: "top",
     color: "#ffff00",
     wrapPixels: 500,
     xOffset: 0.5,
     zOffset: 0.02,
   });
-}, 3000);
+
+  const newRoundBtn = document.createElement("a-plane");
+  newRoundBtn.setAttribute("width", 2.3);
+  newRoundBtn.setAttribute("height", 0.7);
+  newRoundBtn.setAttribute("position", { x: 0, y: -1.5, z: 0.02 });
+  newRoundBtn.setAttribute("material", "color", "#404040");
+  newRoundBtn.setAttribute("text", {
+    value: "New Round",
+    align: "center",
+    color: "#ffffff",
+    wrapPixels: 275,
+    zOffset: 0.02,
+  });
+  newRoundBtn.addEventListener("mouseenter", () => {
+    console.log("mouse over");
+    newRoundBtn.setAttribute("material", "color", "#4d4d4d");
+  });
+  newRoundBtn.addEventListener("mouseleave", () => {
+    newRoundBtn.setAttribute("material", "color", "#404040");
+  });
+  endBoard.appendChild(newRoundBtn);
+
+  scene.appendChild(endBoard);
+}, 300);
 
 setTimeout(() => {}, playUntil - Date.now());
 
