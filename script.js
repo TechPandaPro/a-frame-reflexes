@@ -37,7 +37,8 @@ const existingEntities = [];
 AFRAME.registerComponent("scoreboard", {
   tick: function () {
     this.el.setAttribute("text", {
-      value: `Time: ${formatTimeLeft()}\nScore: ${score}`,
+      value: `Time: ${formatTimeLeft()}
+Score: ${score}`,
       color: "#ffff00",
       wrapPixels: 350,
       xOffset: 0.5,
@@ -110,28 +111,15 @@ function createRandomEntity(position) {
 
     const newEntity = document.createElement(`a-${newEntityGeometry}`);
     newEntity.setAttribute("material", "color", newEntityColor);
-    // newEntity.setAttribute("material", "metalness", 1);
-    // newEntity.setAttribute("material", "blending", "normal");
-    // setTimeout(() => {
     newEntity.setAttribute("material", "src", "#entityTexture");
     newEntity.setAttribute("position", position);
-    // }, 500);
     newEntity.setAttribute("animation", {
       property: "rotation",
       to: { x: 0, y: 360, z: 0 },
-      // dir: "alternate",
       dur: 20000,
       easing: "linear",
       loop: true,
     });
-    // newEntity.setAttribute("animation__2", {
-    //   property: "rotation.z",
-    //   to: 5,
-    //   dir: "alternate",
-    //   dur: 2000,
-    //   easing: "linear",
-    //   loop: true,
-    // });
     scene.appendChild(newEntity);
 
     existingEntities.push({
@@ -153,8 +141,6 @@ function createRandomEntity(position) {
 
         const successText = document.createElement("a-text");
         successText.setAttribute("value", "+1");
-        // successText.setAttribute("material", "transparent", true);
-        // successText.setAttribute("color", "#00ff00");
         successText.setAttribute("rotation", {
           x: 0,
           y: 270 - position.deg,
@@ -235,14 +221,28 @@ function createRandomEntity(position) {
   }
 }
 
-const endBoard = document.createElement("a-box");
+const endBoard = document.createElement("a-plane");
 scene.appendChild(endBoard);
 // FIXME: this shouldn't be a timeout, this should happen when the timer ends
 setTimeout(() => {
-  const pos = getPosDistanceAwayFromCamera(5);
+  const pos = getPosDistanceAwayFromCamera(10);
   endBoard.setAttribute("rotation", pos.rot);
   endBoard.setAttribute("position", pos.pos);
-  // console.log(getPosDistanceAwayFromCamera(5));
+  endBoard.setAttribute("width", 7);
+  endBoard.setAttribute("height", 4);
+  endBoard.setAttribute("material", "color", "#000000");
+  endBoard.setAttribute("text", {
+    value: `Round Over!
+
+Score: ${score}
+Incorrect Clicks: ${"12"}`,
+    // FIXME: add accurate incorrect clicks count
+    // align: "center",
+    color: "#ffff00",
+    wrapPixels: 500,
+    xOffset: 0.5,
+    zOffset: 0.02,
+  });
 }, 3000);
 
 setTimeout(() => {}, playUntil - Date.now());
@@ -251,42 +251,17 @@ function getPosDistanceAwayFromCamera(distance) {
   const cameraPos = scene.camera.el.getAttribute("position");
   const cameraRot = scene.camera.el.getAttribute("rotation");
 
-  // console.log(cameraRot);
-
   const xOffset = distance * Math.sin(cameraRot.y * (Math.PI / 180));
   const zOffset = distance * Math.cos(cameraRot.y * (Math.PI / 180));
 
-  // console.log(cameraRot);
-  // console.log(z);
-  // console.log(x);
-
-  // console.log(z);
-  // console.log(x);
-
   return {
     pos: {
-      // x: cameraPos.x - x,
       x: cameraPos.x - xOffset,
       y: cameraPos.y,
       z: cameraPos.z - zOffset,
     },
     rot: { x: 0, y: cameraRot.y, z: cameraRot.z },
   };
-
-  // const z = distance * Math.cos(cameraRot.y);
-  // const x = distance * Math.sin(cameraRot.y);
-
-  // console.log(z);
-  // console.log(x);
-
-  // return {
-  //   pos: {
-  //     x: cameraPos.x - x,
-  //     y: cameraPos.y + 1,
-  //     z: cameraPos.z - z,
-  //   },
-  //   rot: cameraRot,
-  // };
 }
 
 function createGuideEntity(position) {
@@ -315,31 +290,6 @@ function generateNextGuideEntityData() {
 }
 
 function createScoreEntities(position) {
-  // const primaryBox = document.createElement("a-box");
-  // primaryBox.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
-  // // primaryBox.setAttribute("rotation", { x: 0, y: 90 - position.deg, z: 0 });
-  // // primaryBox.setAttribute("rotation", { x: 0, y: position.deg + 90, z: 0 });
-  // // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
-  // primaryBox.setAttribute("scale", { x: 7, y: 4, z: 0.2 });
-  // primaryBox.setAttribute("position", position);
-  // scene.appendChild(primaryBox);
-
-  // const timeText = document.createElement("a-text");
-  // timeText.setAttribute("value", "hello world");
-  // timeText.setAttribute("color", "#ff0000");
-  // // successText.setAttribute("material", "transparent", true);
-  // // successText.setAttribute("color", "#00ff00");
-  // timeText.setAttribute("rotation", { x: 0, y: 270 - position.deg, z: 0 });
-  // timeText.setAttribute("align", "center");
-  // // timeText.setAttribute("width", 10);
-  // timeText.setAttribute("position", {
-  //   x: position.x + 2,
-  //   y: position.y,
-  //   z: position.z,
-  // });
-  // timeText.setAttribute("scale", { x: 100, y: 100, z: 100 });
-  // scene.appendChild(timeText);
-
   const plane = document.createElement("a-plane");
   plane.setAttribute("scoreboard", "");
   plane.setAttribute("width", 7);
@@ -347,14 +297,6 @@ function createScoreEntities(position) {
   plane.setAttribute("position", position);
   plane.setAttribute("rotation", { x: 0, y: 270 - position.deg, z: 0 });
   plane.setAttribute("material", "color", "#000000");
-  // plane.setAttribute("text", "value", "hello world");
-  // plane.setAttribute("text", {
-  //   value: `Time: ${formatTimeLeft()}\nScore: ${score}`,
-  //   color: "#ffff00",
-  //   wrapPixels: 350,
-  //   xOffset: 0.5,
-  //   zOffset: 0.02,
-  // });
   scene.appendChild(plane);
 
   scorePlanes.push(plane);
