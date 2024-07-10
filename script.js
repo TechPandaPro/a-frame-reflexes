@@ -19,7 +19,7 @@ const potentialGeometries = [
 ];
 
 if (scene.hasLoaded) run();
-else scene.addEventListener("loaded", run);
+else scene.addEventListener("loaded", run, { once: true });
 
 let guideGeometry;
 let guideColorR;
@@ -27,8 +27,8 @@ let guideColorG;
 let guideColorB;
 let guideColor;
 
-let playUntil = Date.now() + 30000;
-let score = 0;
+let playUntil;
+let score;
 
 const scorePlanes = [];
 const guideEntities = [];
@@ -48,31 +48,11 @@ Score: ${score}`,
 });
 
 function run() {
-  addEntitiesInCircle(createRandomEntity, {
-    degreeIncrement: 20,
-    distance: 12,
-    y: 0,
-  });
-
-  updateGuideEntities(generateNextGuideEntityData());
-
-  addEntitiesInCircle(createGuideEntity, {
-    degreeIncrement: 90,
-    distance: 20,
-    y: 7,
-  });
-
-  addEntitiesInCircle(createScoreEntities, {
-    degreeOffset: 45,
-    degreeIncrement: 90,
-    distance: 20,
-    y: 7,
-  });
-
   console.log("Loaded");
+  resetRound();
 }
 
-function createRandomEntity(position) {
+function createRandomEntity(position, existingEntity) {
   let generateNew = true;
 
   while (generateNew) {
@@ -109,146 +89,202 @@ function createRandomEntity(position) {
       continue;
     else generateNew = false;
 
-    const newEntity = document.createElement(`a-${newEntityGeometry}`);
-    newEntity.setAttribute("material", "color", newEntityColor);
-    newEntity.setAttribute("material", "src", "#entityTexture");
-    newEntity.setAttribute("position", position);
-    newEntity.setAttribute("animation", {
-      property: "rotation",
-      to: { x: 0, y: 360, z: 0 },
-      dur: 20000,
-      easing: "linear",
-      loop: true,
-    });
-    scene.appendChild(newEntity);
+    let entity;
+
+    if (existingEntity) entity = existingEntity;
+    else {
+      entity = document.createElement(`a-entity`);
+      entity.setAttribute("material", "src", "#entityTexture");
+      entity.setAttribute("position", position);
+      entity.setAttribute("animation", {
+        property: "rotation",
+        to: { x: 0, y: 360, z: 0 },
+        dur: 20000,
+        easing: "linear",
+        loop: true,
+      });
+      entity.addEventListener("click", () => {
+        if (
+          newEntityGeometry === guideGeometry &&
+          newEntityColorR === guideColorR &&
+          newEntityColorG === guideColorG &&
+          newEntityColorB === guideColorB
+        ) {
+          score++;
+
+          updateGuideEntities(generateNextGuideEntityData());
+
+          const successText = document.createElement("a-text");
+          successText.setAttribute("value", "+1");
+          successText.setAttribute("rotation", {
+            x: 0,
+            y: 270 - position.deg,
+            z: 0,
+          });
+          successText.setAttribute("align", "center");
+          successText.setAttribute("width", 16);
+
+          successText.setAttribute("position", {
+            x: position.x,
+            y: position.y + 2,
+            z: position.z,
+          });
+          successText.setAttribute("animation", {
+            property: "position",
+            to: { x: position.x, y: position.y + 2.5, z: position.z },
+            dur: 500,
+            easing: "easeOutQuad",
+          });
+
+          successText.setAttribute("opacity", 1);
+          successText.setAttribute("animation__2", {
+            property: "opacity",
+            to: 0,
+            dur: 500,
+            easing: "easeOutQuad",
+          });
+
+          scene.appendChild(successText);
+        } else {
+          // const light = document.createElement("a-entity");
+          // light.setAttribute("light", {
+          //   type: "spot",
+          //   color: "#FFF",
+          //   intensity: 10,
+          //   position: { x: position.x, y: position.y - 100, z: position.z },
+          //   // angle: 45,
+          //   target: newEntity,
+          // });
+          // scene.append(light);
+
+          // const lightBox = document.createElement("a-box");
+          const light = document.createElement("a-entity");
+          // lightBox.setAttribute("position", {
+          //   x: position.x,
+          //   y: position.y - 5,
+          //   z: position.z,
+          // });
+          light.setAttribute("light", {
+            type: "spot",
+            color: "#ff0000",
+            intensity: 10,
+            penumbra: 0,
+            angle: 10,
+            // angle: 45,
+            target: entity,
+          });
+          // lightBox.setAttribute("position", { x: 0, y: 5, z: 0 });
+          // lightBox.setAttribute("light", {
+          //   type: "spot",
+          //   color: "#ff0000",
+          //   intensity: 10,
+          //   penumbra: 0.1,
+          //   angle: 20,
+          //   // angle: 45,
+          //   target: newEntity,
+          // });
+          scene.append(light);
+          setTimeout(() => light.parentElement.removeChild(light), 100);
+          // <a-entity
+          //   light="type: point; color: #FFF; intensity: 0.6"
+          //   position="0 0 0"
+          // ></a-entity>
+        }
+
+        console.log("clicked!");
+      });
+      scene.appendChild(entity);
+    }
+
+    entity.setAttribute(
+      "geometry",
+      "primitive",
+      toCamelCase(newEntityGeometry)
+    );
+    entity.setAttribute("material", "color", newEntityColor);
 
     existingEntities.push({
-      // entity: newEntity,
+      entity,
       color: { r: newEntityColorR, g: newEntityColorG, b: newEntityColorB },
       geometry: newEntityGeometry,
-    });
-
-    newEntity.addEventListener("click", () => {
-      if (
-        newEntityGeometry === guideGeometry &&
-        newEntityColorR === guideColorR &&
-        newEntityColorG === guideColorG &&
-        newEntityColorB === guideColorB
-      ) {
-        score++;
-
-        updateGuideEntities(generateNextGuideEntityData());
-
-        const successText = document.createElement("a-text");
-        successText.setAttribute("value", "+1");
-        successText.setAttribute("rotation", {
-          x: 0,
-          y: 270 - position.deg,
-          z: 0,
-        });
-        successText.setAttribute("align", "center");
-        successText.setAttribute("width", 16);
-
-        successText.setAttribute("position", {
-          x: position.x,
-          y: position.y + 2,
-          z: position.z,
-        });
-        successText.setAttribute("animation", {
-          property: "position",
-          to: { x: position.x, y: position.y + 2.5, z: position.z },
-          dur: 500,
-          easing: "easeOutQuad",
-        });
-
-        successText.setAttribute("opacity", 1);
-        successText.setAttribute("animation__2", {
-          property: "opacity",
-          to: 0,
-          dur: 500,
-          easing: "easeOutQuad",
-        });
-
-        scene.appendChild(successText);
-      } else {
-        // const light = document.createElement("a-entity");
-        // light.setAttribute("light", {
-        //   type: "spot",
-        //   color: "#FFF",
-        //   intensity: 10,
-        //   position: { x: position.x, y: position.y - 100, z: position.z },
-        //   // angle: 45,
-        //   target: newEntity,
-        // });
-        // scene.append(light);
-
-        // const lightBox = document.createElement("a-box");
-        const light = document.createElement("a-entity");
-        // lightBox.setAttribute("position", {
-        //   x: position.x,
-        //   y: position.y - 5,
-        //   z: position.z,
-        // });
-        light.setAttribute("light", {
-          type: "spot",
-          color: "#ff0000",
-          intensity: 10,
-          penumbra: 0,
-          angle: 10,
-          // angle: 45,
-          target: newEntity,
-        });
-        // lightBox.setAttribute("position", { x: 0, y: 5, z: 0 });
-        // lightBox.setAttribute("light", {
-        //   type: "spot",
-        //   color: "#ff0000",
-        //   intensity: 10,
-        //   penumbra: 0.1,
-        //   angle: 20,
-        //   // angle: 45,
-        //   target: newEntity,
-        // });
-        scene.append(light);
-        setTimeout(() => light.parentElement.removeChild(light), 100);
-        // <a-entity
-        //   light="type: point; color: #FFF; intensity: 0.6"
-        //   position="0 0 0"
-        // ></a-entity>
-      }
-
-      console.log("clicked!");
     });
   }
 }
 
-// FIXME: this shouldn't be a timeout, this should happen when the timer ends
-setTimeout(() => {
+function resetRound() {
+  playUntil = Date.now() + 5000;
+  setTimeout(addRoundOverPlane, playUntil - Date.now());
+
+  score = 0;
+
+  if (existingEntities.length === 0) {
+    addEntitiesInCircle(createRandomEntity, {
+      degreeIncrement: 20,
+      distance: 12,
+      y: 0,
+    });
+  } else {
+    const existingEntitiesCopy = [...existingEntities];
+    existingEntities.splice(0, existingEntities.length);
+    for (const existingEntity of existingEntitiesCopy)
+      createRandomEntity(
+        existingEntity.entity.getAttribute("position"),
+        existingEntity.entity
+      );
+  }
+
+  updateGuideEntities(generateNextGuideEntityData());
+
+  if (guideEntities.length === 0)
+    addEntitiesInCircle(createGuideEntity, {
+      degreeIncrement: 90,
+      distance: 20,
+      y: 7,
+    });
+
+  if (scorePlanes.length === 0)
+    addEntitiesInCircle(createScoreEntities, {
+      degreeOffset: 45,
+      degreeIncrement: 90,
+      distance: 20,
+      y: 7,
+    });
+}
+
+function addRoundOverPlane() {
   const endBoard = document.createElement("a-plane");
   const pos = getPosDistanceAwayFromCamera(10);
   endBoard.setAttribute("rotation", pos.rot);
   endBoard.setAttribute("position", pos.pos);
   endBoard.setAttribute("width", 7);
-  endBoard.setAttribute("height", 4.3);
+  endBoard.setAttribute("height", 4.8);
   endBoard.setAttribute("material", "color", "#000000");
-  endBoard.setAttribute("text", {
-    value: `Round Over!
-    
+
+  const endBoardText = document.createElement("a-text");
+  endBoardText.setAttribute(
+    "value",
+    `Round Over!
+
     Score: ${score}
-    Incorrect Clicks: ${"12"}
- `,
-    // FIXME: add accurate incorrect clicks count
-    // align: "center",
-    // baseline: "top",
-    color: "#ffff00",
-    wrapPixels: 500,
-    xOffset: 0.5,
-    zOffset: 0.02,
-  });
+    Incorrect Clicks: ${"12"}`
+  );
+  // FIXME: add accurate incorrect clicks count
+  // align: "center",
+  // baseline: "top",
+  // endBoardText.setAttribute("align", "left");
+  endBoardText.setAttribute("anchor", "center");
+  endBoardText.setAttribute("position", { x: 0, y: 0.45, z: 0.02 });
+  endBoardText.setAttribute("color", "#ffff00");
+  endBoardText.setAttribute("wrap-pixels", 400);
+  endBoardText.setAttribute("scale", { x: 1.15, y: 1.15, z: 1 });
+  // xOffset: 0.5,
+  // zOffset: 0.02,
+  endBoard.appendChild(endBoardText);
 
   const newRoundBtn = document.createElement("a-plane");
   newRoundBtn.setAttribute("width", 2.3);
   newRoundBtn.setAttribute("height", 0.7);
-  newRoundBtn.setAttribute("position", { x: 0, y: -1.5, z: 0.02 });
+  newRoundBtn.setAttribute("position", { x: 0, y: -1.6, z: 0.02 });
   newRoundBtn.setAttribute("material", "color", "#404040");
   newRoundBtn.setAttribute("text", {
     value: "New Round",
@@ -257,19 +293,24 @@ setTimeout(() => {
     wrapPixels: 275,
     zOffset: 0.02,
   });
-  newRoundBtn.addEventListener("mouseenter", () => {
-    console.log("mouse over");
-    newRoundBtn.setAttribute("material", "color", "#4d4d4d");
-  });
-  newRoundBtn.addEventListener("mouseleave", () => {
-    newRoundBtn.setAttribute("material", "color", "#404040");
-  });
+  newRoundBtn.addEventListener("mouseenter", () =>
+    newRoundBtn.setAttribute("material", "color", "#4d4d4d")
+  );
+  newRoundBtn.addEventListener("mouseleave", () =>
+    newRoundBtn.setAttribute("material", "color", "#404040")
+  );
+  newRoundBtn.addEventListener(
+    "click",
+    () => {
+      endBoard.parentElement.removeChild(endBoard);
+      resetRound();
+    },
+    { once: true }
+  );
   endBoard.appendChild(newRoundBtn);
 
   scene.appendChild(endBoard);
-}, 300);
-
-setTimeout(() => {}, playUntil - Date.now());
+}
 
 function getPosDistanceAwayFromCamera(distance) {
   const cameraPos = scene.camera.el.getAttribute("position");
@@ -310,7 +351,7 @@ function createGuideEntity(position) {
 function generateNextGuideEntityData() {
   const randomEntity =
     existingEntities[getRandomInt(0, existingEntities.length)];
-  return JSON.parse(JSON.stringify(randomEntity));
+  return { color: randomEntity.color, geometry: randomEntity.geometry };
 }
 
 function createScoreEntities(position) {
