@@ -235,6 +235,60 @@ function createRandomEntity(position) {
   }
 }
 
+const endBoard = document.createElement("a-box");
+scene.appendChild(endBoard);
+// FIXME: this shouldn't be a timeout, this should happen when the timer ends
+setTimeout(() => {
+  const pos = getPosDistanceAwayFromCamera(5);
+  endBoard.setAttribute("rotation", pos.rot);
+  endBoard.setAttribute("position", pos.pos);
+  // console.log(getPosDistanceAwayFromCamera(5));
+}, 3000);
+
+setTimeout(() => {}, playUntil - Date.now());
+
+function getPosDistanceAwayFromCamera(distance) {
+  const cameraPos = scene.camera.el.getAttribute("position");
+  const cameraRot = scene.camera.el.getAttribute("rotation");
+
+  // console.log(cameraRot);
+
+  const xOffset = distance * Math.sin(cameraRot.y * (Math.PI / 180));
+  const zOffset = distance * Math.cos(cameraRot.y * (Math.PI / 180));
+
+  // console.log(cameraRot);
+  // console.log(z);
+  // console.log(x);
+
+  // console.log(z);
+  // console.log(x);
+
+  return {
+    pos: {
+      // x: cameraPos.x - x,
+      x: cameraPos.x - xOffset,
+      y: cameraPos.y,
+      z: cameraPos.z - zOffset,
+    },
+    rot: { x: 0, y: cameraRot.y, z: cameraRot.z },
+  };
+
+  // const z = distance * Math.cos(cameraRot.y);
+  // const x = distance * Math.sin(cameraRot.y);
+
+  // console.log(z);
+  // console.log(x);
+
+  // return {
+  //   pos: {
+  //     x: cameraPos.x - x,
+  //     y: cameraPos.y + 1,
+  //     z: cameraPos.z - z,
+  //   },
+  //   rot: cameraRot,
+  // };
+}
+
 function createGuideEntity(position) {
   const newEntity = document.createElement("a-entity");
   newEntity.setAttribute("position", position);
