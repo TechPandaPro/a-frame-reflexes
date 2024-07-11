@@ -5,6 +5,8 @@
 
 const scene = document.querySelector("a-scene");
 
+const ambientLight = document.getElementById("ambientLight");
+
 const potentialGeometries = [
   "box",
   "cone",
@@ -50,6 +52,152 @@ Score: ${score}`,
 });
 
 function run() {
+  // const cameraElem = scene.camera.el;
+
+  // cameraElem.setAttribute("position", { x: -25, y: 10, z: 25 });
+  // cameraElem.setAttribute("rotation", { x: 0, y: -60, z: 0 });
+
+  // cameraElem.setAttribute("animation", {
+  //   property: "position",
+  //   to: { x: 0, y: 1.6, z: 0 },
+  //   dur: 2000,
+  //   easing: "easeOutQuad",
+  // });
+
+  // cameraElem.setAttribute("animation__2", {
+  //   property: "rotation",
+  //   to: { x: 0, y: 0, z: 0 },
+  //   dur: 2000,
+  //   easing: "easeOutQuad",
+  // });
+
+  // const steps = [
+  //   () => {
+
+  //   }
+  // ]
+
+  const tutorialBoard = document.createElement("a-plane");
+  const pos = getPosDistanceAwayFromCamera(10);
+  tutorialBoard.setAttribute("rotation", pos.rot);
+  tutorialBoard.setAttribute("position", pos.pos);
+  tutorialBoard.setAttribute("width", 7);
+  tutorialBoard.setAttribute("height", 4.8);
+  tutorialBoard.setAttribute("material", {
+    color: "#1c1c1c",
+    // shininess: 0,
+    // reflectivity: 0,
+    // dithering: false,
+    // roughness: 0.7,
+    // shader: "flat",
+    shader: "phong",
+    reflectivity: 0.5,
+  });
+  // tutorialBoard.setAttribute("material", "color", "#000000");
+
+  const tutorialBoardText = document.createElement("a-text");
+  //   tutorialBoardText.setAttribute(
+  //     "value",
+  //     `Welcome to A-Frame Reflexes! This is a game built with A-Frame that relies on speed, memory, and reflexes for a high score.
+  // You'll notice that you are surrounded by various colored shapes. These are the shapes that you click.`
+  //   );
+  // FIXME: add accurate incorrect clicks count
+  // align: "center",
+  // baseline: "top",
+  // endBoardText.setAttribute("align", "left");
+  tutorialBoardText.setAttribute("anchor", "center");
+  tutorialBoardText.setAttribute("position", { x: 0, y: 0.45, z: 0.02 });
+  tutorialBoardText.setAttribute("color", "#ffffff");
+  tutorialBoardText.setAttribute("wrap-pixels", 800);
+  tutorialBoardText.setAttribute("scale", { x: 1.15, y: 1.15, z: 1 });
+  // xOffset: 0.5,
+  // zOffset: 0.02,
+  tutorialBoard.appendChild(tutorialBoardText);
+
+  const startBtn = document.createElement("a-plane");
+  startBtn.setAttribute("width", 2.3);
+  startBtn.setAttribute("height", 0.7);
+  startBtn.setAttribute("position", { x: 0, y: -1.6, z: 0.02 });
+  startBtn.setAttribute("material", "color", "#404040");
+  startBtn.setAttribute("text", {
+    value: "Next",
+    align: "center",
+    color: "#ffffff",
+    wrapPixels: 275,
+    zOffset: 0.02,
+  });
+  startBtn.addEventListener("mouseenter", () =>
+    startBtn.setAttribute("material", "color", "#4d4d4d")
+  );
+  startBtn.addEventListener("mouseleave", () =>
+    startBtn.setAttribute("material", "color", "#404040")
+  );
+  tutorialBoard.appendChild(startBtn);
+
+  const steps = [
+    () => {
+      tutorialBoardText.setAttribute(
+        "value",
+        "Welcome to A-Frame Reflexes! This is a game built with A-Frame that relies on speed, memory, and reflexes in order to get a high score."
+      );
+    },
+    () => {
+      tutorialBoardText.setAttribute(
+        "value",
+        "You'll notice that you are surrounded by various colored shapes. These are the shapes that you click."
+      );
+
+      const target = document.createElement("a-entity");
+      target.setAttribute("geometry", "primitive", "box");
+      target.setAttribute("position", { x: 0, y: 0, z: 0 });
+      scene.appendChild(target);
+
+      // ambientLight.setAttribute("intensity", 1);
+      ambientLight.setAttribute("animation", {
+        property: "light.intensity",
+        to: 0,
+        dur: 200,
+        easing: "easeInOutQuad",
+        // loop: true,
+      });
+
+      // ambientLight.setAttribute("visible", false);
+
+      const bottomSpot = document.createElement("a-light");
+      bottomSpot.setAttribute("type", "spot");
+      bottomSpot.setAttribute("light", "target", target);
+      bottomSpot.setAttribute("angle", 80);
+      bottomSpot.setAttribute("intensity", 0);
+      bottomSpot.setAttribute("penumbra", 0.2);
+      bottomSpot.setAttribute("position", { x: 0, y: 7, z: 0 });
+      bottomSpot.setAttribute("animation", {
+        property: "intensity",
+        to: 2,
+        dur: 200,
+        easing: "easeInOutQuad",
+        // loop: true,
+      });
+      scene.appendChild(bottomSpot);
+    },
+  ];
+
+  let step = 0;
+
+  steps[step]();
+
+  startBtn.addEventListener(
+    "click",
+    () => {
+      step++;
+      steps[step]();
+      // tutorialBoard.parentElement.removeChild(tutorialBoard);
+      // resetRound();
+    },
+    { once: true }
+  );
+
+  scene.appendChild(tutorialBoard);
+
   console.log("Loaded");
   resetRound();
 }
