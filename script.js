@@ -27,8 +27,10 @@ let guideColorG;
 let guideColorB;
 let guideColor;
 
+let roundOver;
 let playUntil;
 let score;
+let incorrectClicks;
 
 const scorePlanes = [];
 const guideEntities = [];
@@ -52,7 +54,7 @@ function run() {
   resetRound();
 }
 
-function createRandomEntity(position, existingEntity) {
+function createRandomEntity(position, existingEntityObj) {
   let generateNew = true;
 
   while (generateNew) {
@@ -62,7 +64,7 @@ function createRandomEntity(position, existingEntity) {
     const newEntityColorR = getRandomIntInclusive(0, 255);
     const newEntityColorG = getRandomIntInclusive(0, 255);
     const newEntityColorB = getRandomIntInclusive(0, 255);
-    const newEntityColor = `rgb(${newEntityColorR}, ${newEntityColorG}, ${newEntityColorB})`;
+    // const newEntityColor = `rgb(${newEntityColorR}, ${newEntityColorG}, ${newEntityColorB})`;
 
     if (
       compareColors(
@@ -89,26 +91,37 @@ function createRandomEntity(position, existingEntity) {
       continue;
     else generateNew = false;
 
-    let entity;
+    // let entity;
 
-    if (existingEntity) entity = existingEntity;
-    else {
-      entity = document.createElement(`a-entity`);
-      entity.setAttribute("material", "src", "#entityTexture");
-      entity.setAttribute("position", position);
-      entity.setAttribute("animation", {
+    let entityObj;
+
+    if (existingEntityObj) {
+      // entity = existingEntityObj.entity;
+      entityObj = existingEntityObj;
+    } else {
+      entityObj = {
+        entity: null,
+        color: { r: null, g: null, b: null },
+        geometry: null,
+      };
+      entityObj.entity = document.createElement(`a-entity`);
+      entityObj.entity.setAttribute("material", "src", "#entityTexture");
+      entityObj.entity.setAttribute("position", position);
+      entityObj.entity.setAttribute("animation", {
         property: "rotation",
         to: { x: 0, y: 360, z: 0 },
         dur: 20000,
         easing: "linear",
         loop: true,
       });
-      entity.addEventListener("click", () => {
+      entityObj.entity.addEventListener("click", () => {
+        if (roundOver) return;
+
         if (
-          newEntityGeometry === guideGeometry &&
-          newEntityColorR === guideColorR &&
-          newEntityColorG === guideColorG &&
-          newEntityColorB === guideColorB
+          entityObj.geometry === guideGeometry &&
+          entityObj.color.r === guideColorR &&
+          entityObj.color.g === guideColorG &&
+          entityObj.color.b === guideColorB
         ) {
           score++;
 
@@ -146,6 +159,8 @@ function createRandomEntity(position, existingEntity) {
 
           scene.appendChild(successText);
         } else {
+          incorrectClicks++;
+
           // const light = document.createElement("a-entity");
           // light.setAttribute("light", {
           //   type: "spot",
@@ -171,7 +186,7 @@ function createRandomEntity(position, existingEntity) {
             penumbra: 0,
             angle: 10,
             // angle: 45,
-            target: entity,
+            target: entityObj.entity,
           });
           // lightBox.setAttribute("position", { x: 0, y: 5, z: 0 });
           // lightBox.setAttribute("light", {
@@ -191,31 +206,37 @@ function createRandomEntity(position, existingEntity) {
           // ></a-entity>
         }
 
-        console.log("clicked!");
+        // console.log("clicked!");
       });
-      scene.appendChild(entity);
+      scene.appendChild(entityObj.entity);
     }
 
-    entity.setAttribute(
+    entityObj.color.r = newEntityColorR;
+    entityObj.color.g = newEntityColorG;
+    entityObj.color.b = newEntityColorB;
+    entityObj.geometry = newEntityGeometry;
+
+    entityObj.entity.setAttribute(
       "geometry",
       "primitive",
-      toCamelCase(newEntityGeometry)
+      toCamelCase(entityObj.geometry)
     );
-    entity.setAttribute("material", "color", newEntityColor);
+    entityObj.entity.setAttribute(
+      "material",
+      "color",
+      `rgb(${entityObj.color.r}, ${entityObj.color.g}, ${entityObj.color.b})`
+    );
 
-    existingEntities.push({
-      entity,
-      color: { r: newEntityColorR, g: newEntityColorG, b: newEntityColorB },
-      geometry: newEntityGeometry,
-    });
+    existingEntities.push(entityObj);
   }
 }
 
 function resetRound() {
-  playUntil = Date.now() + 5000;
+  playUntil = Date.now() + 30000;
   setTimeout(addRoundOverPlane, playUntil - Date.now());
 
   score = 0;
+  incorrectClicks = 0;
 
   if (existingEntities.length === 0) {
     addEntitiesInCircle(createRandomEntity, {
@@ -229,7 +250,7 @@ function resetRound() {
     for (const existingEntity of existingEntitiesCopy)
       createRandomEntity(
         existingEntity.entity.getAttribute("position"),
-        existingEntity.entity
+        existingEntity
       );
   }
 
@@ -249,9 +270,13 @@ function resetRound() {
       distance: 20,
       y: 7,
     });
+
+  roundOver = false;
 }
 
 function addRoundOverPlane() {
+  roundOver = true;
+
   const endBoard = document.createElement("a-plane");
   const pos = getPosDistanceAwayFromCamera(10);
   endBoard.setAttribute("rotation", pos.rot);
@@ -265,8 +290,8 @@ function addRoundOverPlane() {
     "value",
     `Round Over!
 
-    Score: ${score}
-    Incorrect Clicks: ${"12"}`
+Score: ${score}
+Incorrect Clicks: ${incorrectClicks}`
   );
   // FIXME: add accurate incorrect clicks count
   // align: "center",
