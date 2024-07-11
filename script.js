@@ -6,6 +6,7 @@
 const scene = document.querySelector("a-scene");
 
 const ambientLight = document.getElementById("ambientLight");
+const pointLight = document.getElementById("pointLight");
 
 const potentialGeometries = [
   "box",
@@ -29,7 +30,7 @@ let guideColorG;
 let guideColorB;
 let guideColor;
 
-let roundOver;
+let roundOver = true;
 let playUntil;
 let score;
 let incorrectClicks;
@@ -78,7 +79,7 @@ function run() {
   // ]
 
   const tutorialBoard = document.createElement("a-plane");
-  const pos = getPosDistanceAwayFromCamera(10);
+  const pos = getPosDistanceAwayFromCamera(8);
   tutorialBoard.setAttribute("rotation", pos.rot);
   tutorialBoard.setAttribute("position", pos.pos);
   tutorialBoard.setAttribute("width", 7);
@@ -89,9 +90,12 @@ function run() {
     // reflectivity: 0,
     // dithering: false,
     // roughness: 0.7,
-    // shader: "flat",
-    shader: "phong",
-    reflectivity: 0.5,
+    // shader: "phong",
+    shader: "flat",
+    // roughness: 0.2,
+    // metalness: 1,
+    // reflectivity: 0.5,
+    side: "double",
   });
   // tutorialBoard.setAttribute("material", "color", "#000000");
 
@@ -118,7 +122,10 @@ function run() {
   startBtn.setAttribute("width", 2.3);
   startBtn.setAttribute("height", 0.7);
   startBtn.setAttribute("position", { x: 0, y: -1.6, z: 0.02 });
-  startBtn.setAttribute("material", "color", "#404040");
+  startBtn.setAttribute("material", {
+    color: "#404040",
+    shader: "flat",
+  });
   startBtn.setAttribute("text", {
     value: "Next",
     align: "center",
@@ -134,23 +141,31 @@ function run() {
   );
   tutorialBoard.appendChild(startBtn);
 
+  // to keep all the vars that need to be shared between steps organized
+  const stepVars = {};
+
   const steps = [
     () => {
       tutorialBoardText.setAttribute(
         "value",
-        "Welcome to A-Frame Reflexes! This is a game built with A-Frame that relies on speed, memory, and reflexes in order to get a high score."
+        "Welcome to A-Frame Reflexes! This is a game built with A-Frame that relies on your speed, memory, and reflexes in order to get a high score."
       );
     },
     () => {
       tutorialBoardText.setAttribute(
         "value",
-        "You'll notice that you are surrounded by various colored shapes. These are the shapes that you click."
+        "You'll notice that you are surrounded by various colored shapes. These are the shapes that you interact with (e.g. click)."
       );
 
-      const target = document.createElement("a-entity");
-      target.setAttribute("geometry", "primitive", "box");
-      target.setAttribute("position", { x: 0, y: 0, z: 0 });
-      scene.appendChild(target);
+      stepVars.ambientLightOriginalIntensity = ambientLight.getAttribute(
+        "light",
+        "intensity"
+      ).intensity;
+
+      stepVars.pointLightOriginalIntensity = pointLight.getAttribute(
+        "light",
+        "intensity"
+      ).intensity;
 
       // ambientLight.setAttribute("intensity", 1);
       ambientLight.setAttribute("animation", {
@@ -161,7 +176,22 @@ function run() {
         // loop: true,
       });
 
+      pointLight.setAttribute("animation", {
+        property: "light.intensity",
+        to: 0.2,
+        dur: 200,
+        easing: "easeInOutQuad",
+        // loop: true,
+      });
+
       // ambientLight.setAttribute("visible", false);
+
+      const target = document.createElement("a-entity");
+      target.setAttribute("geometry", "primitive", "box");
+      target.setAttribute("position", { x: 0, y: 0, z: 0 });
+      scene.appendChild(target);
+
+      stepVars.bottomTarget = target;
 
       const bottomSpot = document.createElement("a-light");
       bottomSpot.setAttribute("type", "spot");
@@ -178,6 +208,120 @@ function run() {
         // loop: true,
       });
       scene.appendChild(bottomSpot);
+
+      stepVars.bottomSpot = bottomSpot;
+    },
+    () => {
+      tutorialBoardText.setAttribute(
+        "value",
+        "You know which colored shapes to click by referencing the floating shapes. These four shapes are all identical and surround you. The scoreboards behave in the same manner. As such, the pertinent details will always be within your vision."
+      );
+
+      // ambientLight.removeAttribute("animation");
+      // pointLight.removeAttribute("animation");
+
+      // stepVars.bottomTarget.setAttribute("animation", {
+      //   property: "position",
+      //   to: { x: 0, y: 14, z: 0 },
+      //   dur: 200,
+      //   easing: "easeOutQuad",
+      // });
+
+      // stepVars.bottomSpot.setAttribute("animation", {
+      //   property: "position",
+      //   to: { x: 0, y: 0, z: 0 },
+      //   dur: 200,
+      //   easing: "easeOutQuad",
+      // });
+
+      // stepVars.bottomSpot.setAttribute("animation__2", {
+      //   property: "angle",
+      //   to: 85,
+      //   dur: 200,
+      //   easing: "easeOutQuad",
+      // });
+
+      stepVars.bottomSpot.setAttribute("animation", {
+        property: "intensity",
+        to: 0,
+        dur: 200,
+        easing: "easeOutQuad",
+      });
+
+      setTimeout(() => {
+        stepVars.bottomTarget.parentElement.removeChild(stepVars.bottomTarget);
+        stepVars.bottomSpot.parentElement.removeChild(stepVars.bottomSpot);
+      }, 200);
+
+      const target = document.createElement("a-entity");
+      target.setAttribute("geometry", "primitive", "box");
+      target.setAttribute("position", { x: 0, y: 14, z: 0 });
+      scene.appendChild(target);
+
+      stepVars.topTarget = target;
+
+      const topSpot = document.createElement("a-light");
+      topSpot.setAttribute("type", "spot");
+      topSpot.setAttribute("light", "target", target);
+      topSpot.setAttribute("angle", 85);
+      topSpot.setAttribute("intensity", 0);
+      topSpot.setAttribute("penumbra", 0.2);
+      topSpot.setAttribute("position", { x: 0, y: 0, z: 0 });
+      topSpot.setAttribute("animation", {
+        property: "intensity",
+        to: 2,
+        dur: 200,
+        easing: "easeInOutQuad",
+        // loop: true,
+      });
+      scene.appendChild(topSpot);
+
+      stepVars.topSpot = topSpot;
+    },
+    () => {
+      tutorialBoardText.setAttribute(
+        "value",
+        "Each shape you correctly click adds +1 to your score. Your score is not penalized for incorrect clicks, but you will be shown this data (# of incorrect clicks) at the end of each round."
+      );
+
+      stepVars.topSpot.setAttribute("animation", {
+        property: "intensity",
+        to: 0,
+        dur: 200,
+        easing: "easeOutQuad",
+      });
+
+      setTimeout(() => {
+        stepVars.topTarget.parentElement.removeChild(stepVars.topTarget);
+        stepVars.topSpot.parentElement.removeChild(stepVars.topSpot);
+      }, 200);
+    },
+    () => {
+      tutorialBoardText.setAttribute(
+        "value",
+        "Each round lasts 30 seconds, and your goal is to get the highest score possible within that time. Ready to get started?"
+      );
+
+      startBtn.setAttribute("text", "value", "I'm Ready!");
+    },
+    () => {
+      tutorialBoard.parentElement.removeChild(tutorialBoard);
+
+      ambientLight.setAttribute("animation", {
+        property: "light.intensity",
+        to: stepVars.ambientLightOriginalIntensity,
+        dur: 200,
+        easing: "easeInOutQuad",
+      });
+
+      pointLight.setAttribute("animation", {
+        property: "light.intensity",
+        to: stepVars.pointLightOriginalIntensity,
+        dur: 200,
+        easing: "easeInOutQuad",
+      });
+
+      setTimeout(startRound, 200);
     },
   ];
 
@@ -185,16 +329,12 @@ function run() {
 
   steps[step]();
 
-  startBtn.addEventListener(
-    "click",
-    () => {
-      step++;
-      steps[step]();
-      // tutorialBoard.parentElement.removeChild(tutorialBoard);
-      // resetRound();
-    },
-    { once: true }
-  );
+  startBtn.addEventListener("click", () => {
+    step++;
+    steps[step]();
+    // tutorialBoard.parentElement.removeChild(tutorialBoard);
+    // resetRound();
+  });
 
   scene.appendChild(tutorialBoard);
 
@@ -379,10 +519,13 @@ function createRandomEntity(position, existingEntityObj) {
   }
 }
 
-function resetRound() {
+function startRound() {
   playUntil = Date.now() + 30000;
   setTimeout(addRoundOverPlane, playUntil - Date.now());
+  roundOver = false;
+}
 
+function resetRound() {
   score = 0;
   incorrectClicks = 0;
 
@@ -418,8 +561,6 @@ function resetRound() {
       distance: 20,
       y: 7,
     });
-
-  roundOver = false;
 }
 
 function addRoundOverPlane() {
@@ -431,7 +572,10 @@ function addRoundOverPlane() {
   endBoard.setAttribute("position", pos.pos);
   endBoard.setAttribute("width", 7);
   endBoard.setAttribute("height", 4.8);
-  endBoard.setAttribute("material", "color", "#000000");
+  endBoard.setAttribute("material", {
+    color: "#000000",
+    side: "both",
+  });
 
   const endBoardText = document.createElement("a-text");
   endBoardText.setAttribute(
@@ -477,6 +621,7 @@ Incorrect Clicks: ${incorrectClicks}`
     () => {
       endBoard.parentElement.removeChild(endBoard);
       resetRound();
+      startRound();
     },
     { once: true }
   );
@@ -534,14 +679,20 @@ function createScoreEntities(position) {
   plane.setAttribute("height", 4);
   plane.setAttribute("position", position);
   plane.setAttribute("rotation", { x: 0, y: 270 - position.deg, z: 0 });
-  plane.setAttribute("material", "color", "#000000");
+  plane.setAttribute("material", {
+    color: "#121212",
+    shader: "phong",
+    side: "double",
+  });
   scene.appendChild(plane);
 
   scorePlanes.push(plane);
 }
 
 function formatTimeLeft() {
-  const timeLeftSeconds = Math.ceil(Math.max(playUntil - Date.now(), 0) / 1000);
+  const timeLeftSeconds = roundOver
+    ? 0
+    : Math.ceil(Math.max(playUntil - Date.now(), 0) / 1000);
 
   const roundMinutes = Math.floor(timeLeftSeconds / 60);
   const roundSeconds = timeLeftSeconds % 60;
