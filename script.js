@@ -1,12 +1,10 @@
-// TODO: prevent duplicate shapes/colors (need to compute distance between colors for this) (done)
-// TODO: make guide entities float
-// TODO: register when correct shape/color is clicked, and then regenerate the guide entity
-// TODO: add directions maybe?
-
 const scene = document.querySelector("a-scene");
 
 const ambientLight = document.getElementById("ambientLight");
 const pointLight = document.getElementById("pointLight");
+
+let ambientLightOriginalIntensity;
+let pointLightOriginalIntensity;
 
 const potentialGeometries = [
   "box",
@@ -18,7 +16,7 @@ const potentialGeometries = [
   "sphere",
   "tetrahedron",
   "torus",
-  "torus-knot",
+  "torusKnot",
 ];
 
 if (scene.hasLoaded) run();
@@ -157,37 +155,39 @@ function run() {
         "You'll notice that you are surrounded by various colored shapes. These are the shapes that you interact with (e.g. click)."
       );
 
-      stepVars.ambientLightOriginalIntensity = ambientLight.getAttribute(
-        "light",
-        "intensity"
-      ).intensity;
+      dimLights();
 
-      stepVars.pointLightOriginalIntensity = pointLight.getAttribute(
-        "light",
-        "intensity"
-      ).intensity;
+      // stepVars.ambientLightOriginalIntensity = ambientLight.getAttribute(
+      //   "light",
+      //   "intensity"
+      // ).intensity;
 
-      // ambientLight.setAttribute("intensity", 1);
-      ambientLight.setAttribute("animation", {
-        property: "light.intensity",
-        to: 0,
-        dur: 200,
-        easing: "easeInOutQuad",
-        // loop: true,
-      });
+      // stepVars.pointLightOriginalIntensity = pointLight.getAttribute(
+      //   "light",
+      //   "intensity"
+      // ).intensity;
 
-      pointLight.setAttribute("animation", {
-        property: "light.intensity",
-        to: 0.2,
-        dur: 200,
-        easing: "easeInOutQuad",
-        // loop: true,
-      });
+      // // ambientLight.setAttribute("intensity", 1);
+      // ambientLight.setAttribute("animation", {
+      //   property: "light.intensity",
+      //   to: 0,
+      //   dur: 200,
+      //   easing: "easeInOutQuad",
+      //   // loop: true,
+      // });
+
+      // pointLight.setAttribute("animation", {
+      //   property: "light.intensity",
+      //   to: 0.2,
+      //   dur: 200,
+      //   easing: "easeInOutQuad",
+      //   // loop: true,
+      // });
 
       // ambientLight.setAttribute("visible", false);
 
       const target = document.createElement("a-entity");
-      target.setAttribute("geometry", "primitive", "box");
+      // target.setAttribute("geometry", "primitive", "box");
       target.setAttribute("position", { x: 0, y: 0, z: 0 });
       scene.appendChild(target);
 
@@ -196,10 +196,10 @@ function run() {
       const bottomSpot = document.createElement("a-light");
       bottomSpot.setAttribute("type", "spot");
       bottomSpot.setAttribute("light", "target", target);
-      bottomSpot.setAttribute("angle", 80);
+      bottomSpot.setAttribute("angle", 90);
       bottomSpot.setAttribute("intensity", 0);
       bottomSpot.setAttribute("penumbra", 0.2);
-      bottomSpot.setAttribute("position", { x: 0, y: 7, z: 0 });
+      bottomSpot.setAttribute("position", { x: 0, y: 4, z: 0 });
       bottomSpot.setAttribute("animation", {
         property: "intensity",
         to: 2,
@@ -214,7 +214,7 @@ function run() {
     () => {
       tutorialBoardText.setAttribute(
         "value",
-        "You know which colored shapes to click by referencing the floating shapes. These four shapes are all identical and surround you. The scoreboards behave in the same manner. As such, the pertinent details will always be within your vision."
+        "You know which colored shapes to click by referencing the floating shapes. These four shapes are all identical and surround you. The scoreboards behave in the same manner. As such, the pertinent details will always be within your field of vision."
       );
 
       // ambientLight.removeAttribute("animation");
@@ -254,7 +254,7 @@ function run() {
       }, 200);
 
       const target = document.createElement("a-entity");
-      target.setAttribute("geometry", "primitive", "box");
+      // target.setAttribute("geometry", "primitive", "box");
       target.setAttribute("position", { x: 0, y: 14, z: 0 });
       scene.appendChild(target);
 
@@ -299,7 +299,7 @@ function run() {
     () => {
       tutorialBoardText.setAttribute(
         "value",
-        "Each round lasts 30 seconds, and your goal is to get the highest score possible within that time. Ready to get started?"
+        "Each round lasts 30 seconds, and your goal is to get the highest score possible within that time frame. Ready to get started?"
       );
 
       startBtn.setAttribute("text", "value", "I'm Ready!");
@@ -307,19 +307,21 @@ function run() {
     () => {
       tutorialBoard.parentElement.removeChild(tutorialBoard);
 
-      ambientLight.setAttribute("animation", {
-        property: "light.intensity",
-        to: stepVars.ambientLightOriginalIntensity,
-        dur: 200,
-        easing: "easeInOutQuad",
-      });
+      brightenLights();
 
-      pointLight.setAttribute("animation", {
-        property: "light.intensity",
-        to: stepVars.pointLightOriginalIntensity,
-        dur: 200,
-        easing: "easeInOutQuad",
-      });
+      // ambientLight.setAttribute("animation", {
+      //   property: "light.intensity",
+      //   to: stepVars.ambientLightOriginalIntensity,
+      //   dur: 200,
+      //   easing: "easeInOutQuad",
+      // });
+
+      // pointLight.setAttribute("animation", {
+      //   property: "light.intensity",
+      //   to: stepVars.pointLightOriginalIntensity,
+      //   dur: 200,
+      //   easing: "easeInOutQuad",
+      // });
 
       setTimeout(startRound, 200);
     },
@@ -504,11 +506,7 @@ function createRandomEntity(position, existingEntityObj) {
     entityObj.color.b = newEntityColorB;
     entityObj.geometry = newEntityGeometry;
 
-    entityObj.entity.setAttribute(
-      "geometry",
-      "primitive",
-      toCamelCase(entityObj.geometry)
-    );
+    entityObj.entity.setAttribute("geometry", "primitive", entityObj.geometry);
     entityObj.entity.setAttribute(
       "material",
       "color",
@@ -521,7 +519,12 @@ function createRandomEntity(position, existingEntityObj) {
 
 function startRound() {
   playUntil = Date.now() + 30000;
-  setTimeout(addRoundOverPlane, playUntil - Date.now());
+  setTimeout(() => {
+    const data = getStoredData();
+    if (score > (data.highScore ?? 0)) data.highScore = score;
+    localStorage.setItem("data", JSON.stringify(data));
+    addRoundOverPlane();
+  }, playUntil - Date.now());
   roundOver = false;
 }
 
@@ -563,18 +566,103 @@ function resetRound() {
     });
 }
 
+function dimLights() {
+  ambientLightOriginalIntensity = ambientLight.getAttribute(
+    "light",
+    "intensity"
+  ).intensity;
+
+  pointLightOriginalIntensity = pointLight.getAttribute(
+    "light",
+    "intensity"
+  ).intensity;
+
+  ambientLight.setAttribute("animation", {
+    property: "light.intensity",
+    to: 0,
+    dur: 200,
+    easing: "easeInOutQuad",
+  });
+
+  pointLight.setAttribute("animation", {
+    property: "light.intensity",
+    to: 0.2,
+    dur: 200,
+    easing: "easeInOutQuad",
+  });
+}
+
+function brightenLights() {
+  ambientLight.setAttribute("animation", {
+    property: "light.intensity",
+    to: ambientLightOriginalIntensity,
+    dur: 200,
+    easing: "easeInOutQuad",
+  });
+
+  pointLight.setAttribute("animation", {
+    property: "light.intensity",
+    to: pointLightOriginalIntensity,
+    dur: 200,
+    easing: "easeInOutQuad",
+  });
+}
+
 function addRoundOverPlane() {
   roundOver = true;
 
-  const endBoard = document.createElement("a-plane");
+  dimLights();
+
   const pos = getPosDistanceAwayFromCamera(10);
+
+  // const endBoardPos = endBoard.getAttribute("position");
+
+  const roundOverSpotTarget = document.createElement("a-entity");
+  // roundOverSpotTarget.setAttribute("geometry", "primitive", "box");
+  roundOverSpotTarget.setAttribute("position", {
+    x: pos.pos.x,
+    y: pos.pos.y + 7,
+    z: pos.pos.z,
+  });
+  // console.log(pos);
+  // roundOverSpotTarget.setAttribute("position", pos.pos);
+  roundOverSpotTarget.setAttribute("animation", {
+    property: "position",
+    to: pos.pos,
+    dur: 300,
+    easing: "easeInOutQuad",
+  });
+  scene.appendChild(roundOverSpotTarget);
+
+  const roundOverSpot = document.createElement("a-light");
+  roundOverSpot.setAttribute("type", "spot");
+  roundOverSpot.setAttribute("light", "target", roundOverSpotTarget);
+  roundOverSpot.setAttribute("angle", 20);
+  roundOverSpot.setAttribute("intensity", 0);
+  roundOverSpot.setAttribute("penumbra", 0.2);
+  roundOverSpot.setAttribute(
+    "position",
+    scene.camera.el.getAttribute("position")
+  );
+  roundOverSpot.setAttribute("animation", {
+    property: "intensity",
+    to: 2,
+    dur: 200,
+    easing: "easeInOutQuad",
+    // loop: true,
+  });
+  scene.appendChild(roundOverSpot);
+
+  const endBoard = document.createElement("a-plane");
   endBoard.setAttribute("rotation", pos.rot);
   endBoard.setAttribute("position", pos.pos);
   endBoard.setAttribute("width", 7);
-  endBoard.setAttribute("height", 4.8);
+  endBoard.setAttribute("height", 5);
   endBoard.setAttribute("material", {
-    color: "#000000",
-    side: "both",
+    // color: "#000000",
+    color: "#1c1c1c",
+    shader: "phong",
+    side: "double",
   });
 
   const endBoardText = document.createElement("a-text");
@@ -583,6 +671,7 @@ function addRoundOverPlane() {
     `Round Over!
 
 Score: ${score}
+High Score: ${getStoredData().highScore ?? 0}
 Incorrect Clicks: ${incorrectClicks}`
   );
   // FIXME: add accurate incorrect clicks count
@@ -590,10 +679,11 @@ Incorrect Clicks: ${incorrectClicks}`
   // baseline: "top",
   // endBoardText.setAttribute("align", "left");
   endBoardText.setAttribute("anchor", "center");
-  endBoardText.setAttribute("position", { x: 0, y: 0.45, z: 0.02 });
+  endBoardText.setAttribute("position", { x: 0, y: 0.55, z: 0.02 });
+  endBoardText.setAttribute("text", "xOffset", 0.15);
   endBoardText.setAttribute("color", "#ffff00");
   endBoardText.setAttribute("wrap-pixels", 400);
-  endBoardText.setAttribute("scale", { x: 1.15, y: 1.15, z: 1 });
+  endBoardText.setAttribute("scale", { x: 1.05, y: 1.05, z: 1 });
   // xOffset: 0.5,
   // zOffset: 0.02,
   endBoard.appendChild(endBoardText);
@@ -602,7 +692,10 @@ Incorrect Clicks: ${incorrectClicks}`
   newRoundBtn.setAttribute("width", 2.3);
   newRoundBtn.setAttribute("height", 0.7);
   newRoundBtn.setAttribute("position", { x: 0, y: -1.6, z: 0.02 });
-  newRoundBtn.setAttribute("material", "color", "#404040");
+  newRoundBtn.setAttribute("material", {
+    color: "#404040",
+    shader: "phong",
+  });
   newRoundBtn.setAttribute("text", {
     value: "New Round",
     align: "center",
@@ -620,8 +713,11 @@ Incorrect Clicks: ${incorrectClicks}`
     "click",
     () => {
       endBoard.parentElement.removeChild(endBoard);
+      roundOverSpotTarget.parentElement.removeChild(roundOverSpotTarget);
+      roundOverSpot.parentElement.removeChild(roundOverSpot);
       resetRound();
-      startRound();
+      brightenLights();
+      setTimeout(() => startRound(), 200);
     },
     { once: true }
   );
@@ -729,17 +825,12 @@ function updateGuideEntities(options = {}) {
 }
 
 function updateGuideEntityFromVars(guideEntity) {
-  guideEntity.setAttribute("geometry", "primitive", toCamelCase(guideGeometry));
+  guideEntity.setAttribute("geometry", "primitive", guideGeometry);
   guideEntity.setAttribute("material", "color", guideColor);
 }
 
-function toCamelCase(geometry) {
-  return geometry
-    .split("-")
-    .map((word, i) =>
-      i === 0 ? word : word.substring(0, 1).toUpperCase() + word.substring(1)
-    )
-    .join("");
+function getStoredData() {
+  return JSON.parse(localStorage.getItem("data") ?? "{}");
 }
 
 // returns a value from 0 to 1 (closer to 0 means they're closer to each other, 1 means they're farther apart)
